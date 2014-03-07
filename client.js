@@ -40,7 +40,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 
   function check_cert(crt) {
     // Condition 1: certificate contains these fields
-    console.log(crt);
     if (  crt.valid_from === undefined || 
           crt.valid_to === undefined || 
           crt.issuer === undefined ||
