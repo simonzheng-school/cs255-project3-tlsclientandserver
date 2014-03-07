@@ -11,6 +11,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
   var tls_server;
   var socket = null;
   var protocol_state;
+  var challenge;
 
   function unwrap_client_pub_key() {
     var pair_pub_pt = sjcl.ecc.curves['c256'].fromBits(
@@ -22,13 +23,15 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     server_log('protocol error');
     socket.destroy();
     protocol_state = 'ABORT';
+    // TODO: make sure challenges don't stay outstanding from client to client?
+    challenge = null;
   }
 
   var client_pub_key = unwrap_client_pub_key();
 
   function get_new_challenge() {
-    // TODO: generate challenge
-    return 'what is your favorite color?';
+    // TODO: use random bit array to make pseudorandom challenge
+    return lib.random_bitarray(32);
   }
 
   function process_client_msg(json_data) {
@@ -48,9 +51,9 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
         }
 
         protocol_state = 'ABORT';
-        var response_correct = false;
-        // TODO: check challenge response
-        response_correct = true;
+        server_log("checking challenge response: " + data.message + ", against: " + challenge); //q
+        var response_correct = lib.ECDSA_verify(client_pub_key, challenge, data.message);
+        
         if (response_correct) {
           server_log('authentication succeeded')
           lib.send_message(socket, TYPE['SUCCESS'], '');
@@ -99,7 +102,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
     server_log('received client connection');
 
-    var challenge = get_new_challenge(); 
+    challenge = get_new_challenge(); 
     server_log('generated challenge: ' + challenge);
 
     protocol_state = 'CHALLENGE';
@@ -111,10 +114,8 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
   server.start = function(port) {
     var server_options = {
-      // TODO: initialize TLS server options
       key: fs.readFileSync('./data/server.key'),
       cert: fs.readFileSync('./data/server.crt'),
-      // ca: fs.readFileSync('./data/rootCA.pem'),
       passphrase: 'banana'
     };
 
