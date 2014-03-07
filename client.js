@@ -51,6 +51,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           protocol_abort();
           return;
         }
+        client_log('got a challenge'); //q
         protocol_state = 'CHALLENGE';
         // TODO: respond to challenge
         lib.send_message(socket, TYPE['RESPONSE'], 'blue');
@@ -86,7 +87,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
 
   client.connect = function(host, port, session_callback_f, session_close_callback_f) {
     var client_options = {
-      // TODO: Fill in options
       ca: fs.readFileSync('./data/rootCA.pem'),
       host: host,
       port: port,
@@ -101,12 +101,14 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         client_log('bad certificate received');
         socket.end();
       }
+      client_log('certificate OK'); //q
     });
 
     socket.setEncoding('utf8');
 
     socket.on('data', function(msg) {
-      process_server_msg(msg)
+      //protocol_state = 'START'; //TODO: remove?
+      process_server_msg(msg);
     });
 
     socket.on('close', function() {
