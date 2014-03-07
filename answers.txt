@@ -1,0 +1,33 @@
+CS 255 - Project 3
+Short Answer Questions
+Stephen Quinonez (stephenq)
+Simon Zheng (szheng0)
+
+1. This would not be secure. This would not satisfy property P2. An active attacker would be able to cause the server
+to report receipt of a message that the client did not send. This would happen if the active attacker
+intercepts message l that is being sent to the client, computes r = SHA-256(l) and sends r back to the server.
+The server would then verify that r is a successful response despite the fact that it came from the attacker.
+In the original model, the fact that the client signs with a secret key that presumably only the client
+knows means the server can trust that the response was from the client.
+
+2. pinning?
+because we don't use the server's PK so we don't need to "really, really" know that it's accurate?
+
+3.
+
+4.
+(a)
+
+(b) If symmetric encryption was used, the server and client would each have to store the key for each connection.
+This means both server and client need trusted storage that grows linearly with the number of connections it has.
+For a server or client with very little trusted storage space, this would cause problems for opening up a large
+number of connections. It would either be unable to or it would have to store some keys in untrusted storage. The
+former is not desired and the latter is insecure.
+
+5.
+? is HMAC a valid example of a hash here? should we bring in the notion of collision resistance?
+(a) The server would store a hash of the client's password, such as the HMAC of the password. The server should
+not store the client's password in the clear because if the attacker manages to break into the server, the attacker
+should not be able to recover the client's password.
+
+(b)
