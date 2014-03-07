@@ -45,14 +45,14 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           crt.issuer === undefined ||
           crt.subject === undefined ||
           crt.fingerprint === undefined ) {
-      client_log('failing condition 1');
+      client_log('failing condition 1'); // SZTODO: remove this
       return false;
     }
     
     // Condition 2: current time is in validity window
     var curr_time = new Date();
     if (curr_time < crt.valid_from || curr_time > crt.valid_to) {
-      client_log('failing condition 2');
+      client_log('failing condition 2'); // SZTODO: remove this
       return false;
     }
 
@@ -60,7 +60,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
     var sevenDaysLater = curr_time;
     sevenDaysLater.setDate(curr_time.getDate()+7);
     if (crt.valid_to < sevenDaysLater) {
-      client_log('failing condition 3');
+      client_log('failing condition 3'); // SZTODO: remove this
       return false;
     }
 
@@ -72,7 +72,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           crt.subject.OU !== 'Project 3' ||
           crt.subject.CN !== 'localhost' || 
           crt.subject.emailAddress !== 'cs255ta@cs.stanford.edu') {
-      client_log('failing condition 4');
+      client_log('failing condition 4'); // SZTODO: remove this
       return false;
     }
 
@@ -92,12 +92,19 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         client_log('got a challenge'); //q
         protocol_state = 'CHALLENGE';
         // TODO: respond to challenge
-        lib.send_message(socket, TYPE['RESPONSE'], 'blue');
+        var response = lib.ECDSA_sign(client_sec_key, data.message);
+
+
+        // SZTODO: all messages you send over the network should consist only of strings of valid, printable ASCII characters.
+        // In addition, regardless of how you generate the challenges, it should be the case that when your server handles n sequential sessions (client connections), it should still use a constant amount of true randomness
+
+        lib.send_message(socket, TYPE['RESPONSE'], response);
         break;
 
       case TYPE['SESSION_MESSAGE']:
         if (protocol_state != 'SUCCESS') {
           protocol_abort();
+          client_log('unsuccessful session message'); // SZTODO remove this
           return;
         }
         client_log('received session message: ' + data.message);
@@ -145,7 +152,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
     socket.setEncoding('utf8');
 
     socket.on('data', function(msg) {
-      //protocol_state = 'START'; //TODO: remove?
+      protocol_state = 'START'; //TODO: remove?
       process_server_msg(msg);
     });
 
