@@ -39,6 +39,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   var session_close_callback = null;
 
   function check_cert(crt) {
+    console.log(crt);
     // Condition 1: certificate contains these fields
     if (  crt.valid_from === undefined || 
           crt.valid_to === undefined || 
