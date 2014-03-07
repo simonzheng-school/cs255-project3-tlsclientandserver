@@ -150,9 +150,9 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
     });
 
     socket.setEncoding('utf8');
+    protocol_state = 'START'; //TODO: remove?
 
     socket.on('data', function(msg) {
-      protocol_state = 'START'; //TODO: remove?
       process_server_msg(msg);
     });
 

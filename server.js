@@ -4,6 +4,8 @@ var sjcl = require('./sjcl');
 var fs = require('fs');
 var tls = require('tls');
 
+// TODO: ask about HMAC-ing challenges?
+
 var server = function(server_key, server_key_password, server_cert, client_pub_key_base64) {
   var server_log = lib.log_with_prefix('server');
   var TYPE = lib.TYPE;
@@ -12,6 +14,8 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
   var socket = null;
   var protocol_state;
   var challenge;
+  var challenge_key;
+  var KEY_LEN = 32; // TODO: is this the proper key length for HMAC?
 
   function unwrap_client_pub_key() {
     var pair_pub_pt = sjcl.ecc.curves['c256'].fromBits(
@@ -24,14 +28,13 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     socket.destroy();
     protocol_state = 'ABORT';
     // TODO: make sure challenges don't stay outstanding from client to client?
-    challenge = null;
   }
 
   var client_pub_key = unwrap_client_pub_key();
 
   function get_new_challenge() {
     // TODO: use random bit array to make pseudorandom challenge
-    return lib.random_bitarray(32);
+    return lib.HMAC(challenge_key, challenge);
   }
 
   function process_client_msg(json_data) {
@@ -52,8 +55,9 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
         protocol_state = 'ABORT';
         server_log("checking challenge response: " + data.message + ", against: " + challenge); //q
+        //TODO: catch "INVALID: inverseMod: p and x must be relatively prime" ? (sjcl.js:1 throw a;)
         var response_correct = lib.ECDSA_verify(client_pub_key, challenge, data.message);
-        
+
         if (response_correct) {
           server_log('authentication succeeded')
           lib.send_message(socket, TYPE['SUCCESS'], '');
@@ -120,6 +124,9 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     };
 
     tls_server = tls.createServer(server_options, on_connect);
+    // seed the challenge
+    challenge = "What is your favorite color?";
+    challenge_key = lib.random_bitarray(KEY_LEN);
 
     tls_server.listen(port, function() {
       server_log('listening on port ' + port);
