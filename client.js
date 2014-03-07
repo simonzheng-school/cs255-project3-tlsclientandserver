@@ -76,7 +76,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
       client_log('failing condition 4'); // SZTODO: remove this
       return false;
     }
-
+    
     // SZTODO: From Assignment: "If any of the above checks is not satisfied, 
     // then the client should abort (via the function called protocol_abort)."
     return true;
