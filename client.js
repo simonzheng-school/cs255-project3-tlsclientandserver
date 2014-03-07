@@ -45,19 +45,25 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           crt.valid_to === undefined || 
           crt.issuer === undefined ||
           crt.subject === undefined ||
-          crt.fingerprint === undefined ) 
+          crt.fingerprint === undefined ) {
+      client_log('failing condition 1');
       return false;
+    }
     
     // Condition 2: current time is in validity window
     var curr_time = new Date();
-    if (curr_time < valid_from || curr_time > valid_to)
+    if (curr_time < crt.valid_from || curr_time > crt.valid_to) {
+      client_log('failing condition 2');
       return false;
+    }
 
     // Condition 3: cert will not expire in next 7 days
     var sevenDaysLater = curr_time;
     sevenDaysLater.setDate(curr_time.getDate()+7);
-    if (valid_to < sevenDaysLater)
+    if (crt.valid_to < sevenDaysLater) {
+      client_log('failing condition 3');
       return false;
+    }
 
     // Condition 4: cert's subject contains these fields
     if (  crt.subject.C != 'US' || 
@@ -66,8 +72,10 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           crt.subject.O != 'CS 255' ||
           crt.subject.OU != 'Project 3' ||
           crt.subject.CN != 'localhost' || 
-          crt.emailAddress != 'cs255ta@cs.stanford.edu')
+          crt.subject.emailAddress != 'cs255ta@cs.stanford.edu') {
+      client_log('failing condition 4');
       return false;
+    }
 
     // SZTODO: From Assignment: "If any of the above checks is not satisfied, 
     // then the client should abort (via the function called protocol_abort)."
