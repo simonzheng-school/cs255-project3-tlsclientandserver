@@ -39,7 +39,46 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   var session_close_callback = null;
 
   function check_cert(crt) {
-    // TODO: implement the X.509 certificate checks
+    // Condition 1: certificate contains these fields
+    console.log(crt);
+    if (  crt.valid_from === undefined || 
+          crt.valid_to === undefined || 
+          crt.issuer === undefined ||
+          crt.subject === undefined ||
+          crt.fingerprint === undefined ) {
+      client_log('failing condition 1');
+      return false;
+    }
+    
+    // Condition 2: current time is in validity window
+    var curr_time = new Date();
+    if (curr_time < crt.valid_from || curr_time > crt.valid_to) {
+      client_log('failing condition 2');
+      return false;
+    }
+
+    // Condition 3: cert will not expire in next 7 days
+    var sevenDaysLater = curr_time;
+    sevenDaysLater.setDate(curr_time.getDate()+7);
+    if (crt.valid_to < sevenDaysLater) {
+      client_log('failing condition 3');
+      return false;
+    }
+
+    // Condition 4: cert's subject contains these fields
+    if (  crt.subject.C !== 'US' || 
+          crt.subject.ST !== 'CA' ||
+          crt.subject.L !== 'Stanford' || 
+          crt.subject.O !== 'CS 255' ||
+          crt.subject.OU !== 'Project 3' ||
+          crt.subject.CN !== 'localhost' || 
+          crt.subject.emailAddress !== 'cs255ta@cs.stanford.edu') {
+      client_log('failing condition 4');
+      return false;
+    }
+
+    // SZTODO: From Assignment: "If any of the above checks is not satisfied, 
+    // then the client should abort (via the function called protocol_abort)."
     return true;
   }
 
