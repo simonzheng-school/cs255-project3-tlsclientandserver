@@ -12,6 +12,7 @@ knows means the server can trust that the response was from the client.
 
 2. pinning?
 because we don't use the server's PK so we don't need to "really, really" know that it's accurate?
+// http://www.zytrax.com/tech/survival/ssl.html ?
 
 3.
 
