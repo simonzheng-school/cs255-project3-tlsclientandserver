@@ -66,13 +66,13 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
     }
 
     // Condition 4: cert's subject contains these fields
-    if (  crt.subject.C != 'US' || 
-          crt.subject.ST != 'CA' ||
-          crt.subject.L != 'Stanford' || 
-          crt.subject.O != 'CS 255' ||
-          crt.subject.OU != 'Project 3' ||
-          crt.subject.CN != 'localhost' || 
-          crt.subject.emailAddress != 'cs255ta@cs.stanford.edu') {
+    if (  crt.subject.C !== 'US' || 
+          crt.subject.ST !== 'CA' ||
+          crt.subject.L !== 'Stanford' || 
+          crt.subject.O !== 'CS 255' ||
+          crt.subject.OU !== 'Project 3' ||
+          crt.subject.CN !== 'localhost' || 
+          crt.subject.emailAddress !== 'cs255ta@cs.stanford.edu') {
       client_log('failing condition 4');
       return false;
     }
