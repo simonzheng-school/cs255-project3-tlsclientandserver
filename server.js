@@ -1,7 +1,7 @@
 
 var lib = require('./lib');
 var sjcl = require('./sjcl');
-
+var fs = require('fs');
 var tls = require('tls');
 
 var server = function(server_key, server_key_password, server_cert, client_pub_key_base64) {
@@ -112,9 +112,10 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
   server.start = function(port) {
     var server_options = {
       // TODO: initialize TLS server options
-      key: null,
-      cert: null,
-      passphrase: null
+      key: fs.readFileSync('./data/server.key'),
+      cert: fs.readFileSync('./data/server.crt'),
+      // ca: fs.readFileSync('./data/rootCA.pem'),
+      passphrase: 'banana'
     };
 
     tls_server = tls.createServer(server_options, on_connect);
