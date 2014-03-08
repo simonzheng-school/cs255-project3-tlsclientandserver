@@ -3,24 +3,21 @@ Short Answer Questions
 Stephen Quinonez (stephenq)
 Simon Zheng (szheng0)
 
-1. This would not be secure. This would not satisfy property P2. An active attacker would be able to cause the server
-to report receipt of a message that the client did not send. This would happen if the active attacker
-intercepts message l that is being sent to the client, computes r = SHA-256(l) and sends r back to the server.
-The server would then verify that r is a successful response despite the fact that it came from the attacker.
-In the original model, the fact that the client signs with a secret key that presumably only the client
-knows means the server can trust that the response was from the client.
+// simon: hmac takes a key and a message to compute a signature. the adversary must not know the key, otherwise all security is lost. therefore, if we were to generate a random challenge, and then HMAC it, we would need to hmac it with a key that remains secret always. maybe use a server secret key? _____
 
-2. pinning?
-because we don't use the server's PK so we don't need to "really, really" know that it's accurate?
-// http://www.zytrax.com/tech/survival/ssl.html ?
+1. This would not be secure. This would not satisfy property P2. An active attacker would be able to cause the server to report receipt of a message that the client did not send. This would happen if the active attacker intercepts message l that is being sent to the client, computes r = SHA-256(l) and sends r back to the server.
+The server would then verify that r is a successful response despite the fact that it came from the attacker. In the original model, the fact that the client signs with a secret key that presumably only the client knows means the server can trust that the response was from the client.
 
-3.
+2. The client never needs to check the "Issuer" field of the server's X.509 certificate because the client already verifies the signature of the certificate. If the signature of the certificate verifies correctly, then the client can reasonably assume that the certificate should come from the CA because a CA should only sign certificates where they are the issuer. Otherwise, the CA would be a malicious CA.
+// simon: stephen: look over this and especially the last sentence. Do we need it? I was trying to say something like, 'if the CA was malicious, then all hope is lost anyway'. _____
+
+3. 
 
 4.
-(a)
+(a) One advantage of using symmetric-key challenge-response is that we would no longer need to _____ (simon: likely more efficient)
 
 (b) If symmetric encryption was used, the server and client would each have to store the key for each connection.
-This means both server and client need trusted storage that grows linearly with the number of connections it has.
+This means both server and client need trusted storage that grows linearly with the number of connections that a client or server has.
 For a server or client with very little trusted storage space, this would cause problems for opening up a large
 number of connections. It would either be unable to or it would have to store some keys in untrusted storage. The
 former is not desired and the latter is insecure.
