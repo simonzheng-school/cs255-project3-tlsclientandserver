@@ -4,8 +4,6 @@ var sjcl = require('./sjcl');
 var fs = require('fs');
 var tls = require('tls');
 
-// TODO: ask about HMAC-ing challenges?
-
 var server = function(server_key, server_key_password, server_cert, client_pub_key_base64) {
   var server_log = lib.log_with_prefix('server');
   var TYPE = lib.TYPE;
@@ -27,14 +25,13 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     server_log('protocol error');
     socket.destroy();
     protocol_state = 'ABORT';
-    // TODO: make sure challenges don't stay outstanding from client to client?
   }
 
   var client_pub_key = unwrap_client_pub_key();
 
   function get_new_challenge() {
-    // TODO: use random bit array to make pseudorandom challenge
-    return lib.HMAC(challenge_key, challenge);
+    counter += 1;
+    return lib.HMAC(challenge_key, counter);
   }
 
   function process_client_msg(json_data) {
@@ -54,7 +51,6 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
         }
 
         protocol_state = 'ABORT';
-        server_log("checking challenge response: " + data.message + ", against: " + challenge); //q
         //TODO: catch "INVALID: inverseMod: p and x must be relatively prime" ? (sjcl.js:1 throw a;)
         var response_correct = lib.ECDSA_verify(client_pub_key, challenge, data.message);
 
@@ -124,8 +120,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
     };
 
     tls_server = tls.createServer(server_options, on_connect);
-    // seed the challenge
-    challenge = "What is your favorite color?";
+    counter = 1;
     challenge_key = lib.random_bitarray(KEY_LEN);
 
     tls_server.listen(port, function() {

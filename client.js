@@ -39,21 +39,18 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
   var session_close_callback = null;
 
   function check_cert(crt) {
-    console.log(crt);
     // Condition 1: certificate contains these fields
     if (  crt.valid_from === undefined || 
           crt.valid_to === undefined || 
           crt.issuer === undefined ||
           crt.subject === undefined ||
           crt.fingerprint === undefined ) {
-      client_log('failing condition 1'); // SZTODO: remove this
       return false;
     }
     
     // Condition 2: current time is in validity window
     var curr_time = new Date();
     if (curr_time < crt.valid_from || curr_time > crt.valid_to) {
-      client_log('failing condition 2'); // SZTODO: remove this
       return false;
     }
 
@@ -61,7 +58,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
     var sevenDaysLater = curr_time;
     sevenDaysLater.setDate(curr_time.getDate()+7);
     if (crt.valid_to < sevenDaysLater) {
-      client_log('failing condition 3'); // SZTODO: remove this
       return false;
     }
 
@@ -73,7 +69,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           crt.subject.OU !== 'Project 3' ||
           crt.subject.CN !== 'localhost' || 
           crt.subject.emailAddress !== 'cs255ta@cs.stanford.edu') {
-      client_log('failing condition 4'); // SZTODO: remove this
       return false;
     }
     
@@ -90,7 +85,7 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
           protocol_abort();
           return;
         }
-        client_log('got a challenge'); //q
+
         protocol_state = 'CHALLENGE';
         // TODO: respond to challenge
         var response = lib.ECDSA_sign(client_sec_key, data.message);
@@ -147,11 +142,10 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         client_log('bad certificate received');
         socket.end();
       }
-      client_log('certificate OK'); //q
     });
 
     socket.setEncoding('utf8');
-    protocol_state = 'START'; //TODO: remove?
+    protocol_state = 'START';
 
     socket.on('data', function(msg) {
       process_server_msg(msg);
