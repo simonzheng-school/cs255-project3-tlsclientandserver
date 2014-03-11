@@ -87,12 +87,10 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
         }
 
         protocol_state = 'CHALLENGE';
-        // TODO: respond to challenge
         var response = lib.ECDSA_sign(client_sec_key, data.message);
 
 
         // SZTODO: all messages you send over the network should consist only of strings of valid, printable ASCII characters.
-        // In addition, regardless of how you generate the challenges, it should be the case that when your server handles n sequential sessions (client connections), it should still use a constant amount of true randomness
 
         lib.send_message(socket, TYPE['RESPONSE'], response);
         break;
@@ -100,7 +98,6 @@ var client = function(client_sec_key_base64, client_sec_key_password, ca_cert, n
       case TYPE['SESSION_MESSAGE']:
         if (protocol_state != 'SUCCESS') {
           protocol_abort();
-          client_log('unsuccessful session message'); // SZTODO remove this
           return;
         }
         client_log('received session message: ' + data.message);
