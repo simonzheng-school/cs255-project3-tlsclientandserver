@@ -3,31 +3,22 @@ Short Answer Questions
 Stephen Quinonez (stephenq)
 Simon Zheng (szheng0)
 
-// simon: hmac takes a key and a message to compute a signature. the adversary must not know the key, otherwise all security is lost. therefore, if we were to generate a random challenge, and then HMAC it, we would need to hmac it with a key that remains secret always. maybe use a server secret key? _____
-
-1. This would not be secure. This would not satisfy property P2. An active attacker would be able to cause the server to report receipt of a message that the client did not send. This would happen if the active attacker intercepts message l that is being sent to the client, computes r = SHA-256(l) and sends r back to the server.
+1. This would not be secure. This would not satisfy the security property P2. An active attacker would be able to cause the server to report receipt of a message that the client did not send. This would happen if the active attacker intercepts message l that is being sent to the client, computes r = SHA-256(l) and sends r back to the server.
 The server would then verify that r is a successful response despite the fact that it came from the attacker. In the original model, the fact that the client signs with a secret key that presumably only the client knows means the server can trust that the response was from the client.
 
-2. The client never needs to check the "Issuer" field of the server's X.509 certificate because the client verifies the CA's signature of the certificate, which should not be able to be existentially forged. If the signature of the certificate verifies correctly, then the client can reasonably assume that the certificate should come from the CA because a CA should only sign certificates where they are the issuer. Otherwise, the CA would be a malicious CA.
-// simon: stephen: look over this and especially the last sentence. Do we need it? I was trying to say something like, 'if the CA was malicious, then all hope is lost anyway'. _____
+2. The client never needs to check the "Issuer" field of the server's X.509 certificate because the client already verifies the CA's signature of the certificate. If the signature of the certificate verifies correctly, then the client can assume that the certificate came from the CA because a CA only signs certificates where it is the issuer and its signature will only verify if the original certificate has not been tampered with. Since CAs use secure signature schemes, then these signatures should be existentially unforgeable for anyone but the CA.
 
-3. 
-// if they generated kdf without using kdf then the attacker could brute force pretty quickly
-// 
+3.
+In the current implementation, the client’s secret key is encrypted before being stored on the disk. If the key was stored on disk in the clear, the system could still work, you would simply have to remove the code in unwrap_client_sec_key that decrypts it (as well as the code that encrypts it before storing it on the disk). However, this would not be secure, because an attacker that can gain access to the disk would then be able to read the client’s secret key in the clear, allowing the attacker to decrypt messages that are encrypted for the client.
+
+In the current implementation, the client’s secret key password (client_sec_key_password) is used to derive sk_der, which is used to decrypt the secret key which was stored on disk. The value of sk_der is obtained by running client_sec_key_password through PBKDF2, which is known to be a relatively slow algorithm. This is to prevent an attacker from running a dictionary attack to guess the password. If in place of using PBKDF2, the secret key password was instead obtained through a fast hash function such as SHA256, the system would still work correctly, however it would be vulnerable to a dictionary attack since SHA256 is much faster and doesn’t do multiple rounds of hashing like PBKDF2 does. An attacker would be able to repeatedly guess values for client_sec_key_password in an attempt to recover the client’s secret key, and the time taken for the attacker to recover the client’s secret key would be drastically reduced.
 
 4.
-(a) One advantage of using symmetric-key challenge-response is that we would no longer need to _____ (simon: likely more efficient)
+(a) One advantage of using symmetric-key challenge-response is that symmetric key encryption primitives are faster than public key encryption primitives. One reason that symmetric key cryptography is faster is because the operations for common symmetric key primitives (such as HMAC) are XORs and concatenations, whereas common public key primitive operations involve exponentiations, which are much slower to do with algorithms such as repeated squaring. Furthermore, the keys for common MACs are much smaller to XOR with the typical block size of 128 bits, whereas the key length for common public key encryption systems such as RSA are much longer, often using 2048 bits in order to not be efficiently factorable (if the keys were factorable, then the public key cryptography system would be broken). As a result, symmetric key encryption is more time-efficient than public key encryption (though not as space-efficient, as shown in part (b)). 
 
-(b) If symmetric encryption was used, the server and client would each have to store the key for each connection.
-This means both server and client need trusted storage that grows linearly with the number of connections that a client or server has.
-For a server or client with very little trusted storage space, this would cause problems for opening up a large
-number of connections. It would either be unable to or it would have to store some keys in untrusted storage. The
-former is not desired and the latter is insecure.
+(b) If symmetric encryption was used, the server and client would each have to store the key for each connection. This means both server and client need trusted storage that grows linearly with the number of connections that a client or server has.
+For a server or client with very little trusted storage space, this would cause problems for opening up a large number of connections. It would either be unable to or it would have to store some keys in untrusted storage. The former is not desired and the latter is insecure.
 
 5.
-? is HMAC a valid example of a hash here? should we bring in the notion of collision resistance?
-(a) The server would store a hash of the client's password, such as the HMAC of the password. The server should
-not store the client's password in the clear because if the attacker manages to break into the server, the attacker
-should not be able to recover the client's password.
-
-(b)
+(a) The server would store a hash of the client's password, such as the HMAC of the password using a randomly chosen master secret key. Because HMAC is a secure PRF, the hashes reveal nothing about the original password. Ideally the passwords are also salted and the salt is maintained by the server. The server should not store the client's password in the clear because if the attacker manages to break into the server, the attacker should not be able to recover the client's password. The hashes are salted so that even if the server is broken into, it is hard to execute a dictionary attack to recover some of the passwords.
+(b) If the attacker can trick a CA into issuing a bad certificate and is able to claim that the server’s public key is a public key generated by the attacker, this allows the attacker to trick a client into encrypting data meant for the server under the attacker’s public key. If the system uses simple password authentication, this could result in the attacker being able to recover a client’s password. This would happen if the attacker tricks the client into connecting with it by masquerading as the server. The client would verify that the attacker is the server because of the bad certificate, and then send over the client’s password. If this happens, even after the bad certificate expires, the attacker would have the client’s password, allowing the attacker to connect to the server with the tricked client’s credentials.

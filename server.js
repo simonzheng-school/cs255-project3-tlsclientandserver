@@ -31,7 +31,7 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
 
   function get_new_challenge() {
     counter += 1;
-    return lib.HMAC(challenge_key, counter);
+    return lib.bitarray_to_base64(lib.HMAC(challenge_key, counter));
   }
 
   function process_client_msg(json_data) {
