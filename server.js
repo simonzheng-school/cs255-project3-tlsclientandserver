@@ -51,9 +51,14 @@ var server = function(server_key, server_key_password, server_cert, client_pub_k
         }
 
         protocol_state = 'ABORT';
-        //TODO: catch "INVALID: inverseMod: p and x must be relatively prime" ? (sjcl.js:1 throw a;)
-        var response_correct = lib.ECDSA_verify(client_pub_key, challenge, data.message);
-
+        try {
+          var response_correct = lib.ECDSA_verify(client_pub_key, challenge, data.message);
+        }
+        // this will catch "INVALID: inverseMod: p and x must be relatively prime" ? (sjcl.js:1 throw a;) and abort
+        catch(e){
+          protocol_abort();
+        }
+        
         if (response_correct) {
           server_log('authentication succeeded')
           lib.send_message(socket, TYPE['SUCCESS'], '');
